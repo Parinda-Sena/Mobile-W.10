@@ -1,35 +1,33 @@
-export const DATABASE_NAME = 'expense_basic.db'
+export const DATABASE_NAME = 'expenses.db';
 
 export async function initDb(db) {
     await db.execAsync(`
+        PRAGMA journal_mode = WAL;
         CREATE TABLE IF NOT EXISTS expenses (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL<
-            amount INTEGER NOTNULL,
-            spent_at    TEXT    NOTNULL
-        )
-     `)
-    
+            title TEXT NOT NULL,
+            amount REAL NOT NULL,
+            spent_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+    `);
 }
-export function listExpenses(db) {
-    return db.getAllAsync('SELECT * FROM expenses ORDER BY id DESC')
+
+export async function listExpenses(db) {
+    return await db.getAllAsync('SELECT * FROM expenses ORDER BY id DESC;');
+}
+
+export async function addExpenses(db, title, amount) {
+    await db.runAsync(
+        'INSERT INTO expenses (title, amount) VALUES (?, ?);',
+        [title, amount]
+    );
 }
 
 export async function totalExpense(db) {
-    const row = await db.getFirstAsync('SELECT SUM(amount) AS total FROM expenses')
-    return row?.total ?? 0
+    const result = await db.getFirstAsync('SELECT SUM(amount) as total FROM expenses;');
+    return result?.total ?? 0;
 }
 
-export async function addExpenses(db,amount) {
-    const today = new Date().toISOString().slice(0,10)
-    const result = await db.runAsync(
-        'INSERT INTO expenses(title,amount,spent_at) VALUES (?,?,?)',[title,amount,spent_at]
-    ) 
-    return result.lastInsertRowId
-}
-
-export async function deleateExpenses() {
-    const result = await db.runAsync('DELEATE FROM expenses WHERE id =?',[id])
-    return result.changes
-    
+export async function deleateExpenses(db, id) {
+    await db.runAsync('DELETE FROM expenses WHERE id = ?;', [id]);
 }
